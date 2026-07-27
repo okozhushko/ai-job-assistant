@@ -13,10 +13,10 @@ Telegram-бот, що шукає вакансії за твоїми критер
 
 Для MVP підключені лише джерела з офіційним публічним API:
 
-| Джерело | Країни     | Примітка                                                            |
-|---------|------------|----------------------------------------------------------------------|
-| Jooble  | UA, PL, ES | Безкоштовний API-ключ на https://jooble.org/api/about                |
-| Adzuna  | PL, ES     | Adzuna не покриває Україну. Ключі на https://developer.adzuna.com/   |
+| Джерело | Країни     | Примітка                                                           |
+| ------- | ---------- | ------------------------------------------------------------------ |
+| Jooble  | UA, PL, ES | Безкоштовний API-ключ на https://jooble.org/api/about              |
+| Adzuna  | PL, ES     | Adzuna не покриває Україну. Ключі на https://developer.adzuna.com/ |
 
 **Indeed** свідомо не додано в MVP: публічну Publisher API-програму Indeed закрив для нових розробників ще у 2021 році, тож стабільної офіційної інтеграції зараз немає.
 
@@ -45,7 +45,22 @@ npm run dev      # розробка (tsx watch)
 npm run build    # компіляція в dist/
 npm start        # запуск скомпільованого бота
 npm run typecheck
+npm run lint       # ESLint
+npm run format     # Prettier --write
 ```
+
+## Запуск у Docker
+
+```bash
+cp .env.example .env
+# заповни .env
+
+docker compose up --build -d
+docker compose logs -f
+docker compose down
+```
+
+Образ — multi-stage build (`node:20-alpine`): окремі стадії для встановлення залежностей, компіляції TypeScript і рантайму без dev-залежностей, процес у контейнері виконується від непривілейованого користувача `node`. Дані (`data/`) монтуються як volume і переживають перестворення контейнера. `HEALTHCHECK` смикає локальний `/health` ендпоінт (`HEALTH_PORT`, за замовчуванням `3000`) — бот сам по собі не має HTTP API, цей сервер піднято лише для health-перевірки.
 
 ## Структура проєкту
 
@@ -54,11 +69,14 @@ src/
   bot/            Telegram-бот: обробники команд, клавіатури, стан майстра налаштувань
   config/         Валідація змінних оточення (zod)
   domain/         Типи домену + сервіс пошуку (агрегує джерела, дедублікує)
+  health/         HTTP-сервер для Docker HEALTHCHECK
   scheduler/      Періодичний фоновий пошук (node-cron)
   settings/       Зберігання налаштувань користувача (JSON-файл у data/)
   sources/        Адаптери джерел вакансій (jooble.ts, adzuna.ts) + реєстр
   storage/        Дженерик JSON-сховище + трекінг "уже показаних" вакансій
 data/             Локальні дані (settings.json, seen-vacancies.json) — не в git
+Dockerfile        Multi-stage build (deps → build → runtime), non-root user
+docker-compose.yml
 ```
 
 Дані користувачів зараз зберігаються у JSON-файлах у `data/` — достатньо для одного користувача/MVP. Стан майстра `/settings` живе в пам'яті процесу (скидається при рестарті).

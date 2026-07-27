@@ -15,6 +15,8 @@ export function registerStartHandlers(bot: Telegraf): void {
   });
 
   bot.help(async (ctx) => {
-    await ctx.reply('Використай /settings, щоб налаштувати пошук, а потім /search, щоб знайти вакансії.');
+    await ctx.reply(
+      'Використай /settings, щоб налаштувати пошук, а потім /search, щоб знайти вакансії.',
+    );
   });
 }

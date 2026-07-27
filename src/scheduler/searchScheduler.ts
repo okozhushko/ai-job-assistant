@@ -18,7 +18,10 @@ export function startScheduler(bot: Telegraf): void {
           link_preview_options: { is_disabled: true },
         });
       } catch (err) {
-        console.error(`[scheduler] пошук для користувача ${settings.telegramUserId} не вдався:`, err);
+        console.error(
+          `[scheduler] пошук для користувача ${settings.telegramUserId} не вдався:`,
+          err,
+        );
       }
     }
   });

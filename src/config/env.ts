@@ -7,6 +7,7 @@ const envSchema = z.object({
   ADZUNA_APP_ID: z.string().optional(),
   ADZUNA_APP_KEY: z.string().optional(),
   SEARCH_INTERVAL_CRON: z.string().default('0 */6 * * *'),
+  HEALTH_PORT: z.coerce.number().int().positive().default(3000),
 });
 
 export const env = envSchema.parse(process.env);

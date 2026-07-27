@@ -39,7 +39,10 @@ export function registerSettingsHandlers(bot: Telegraf): void {
         .map((s) => s.trim())
         .filter(Boolean);
       draft.step = 'countries';
-      await ctx.reply('Обери країни пошуку:', toggleKeyboard(COUNTRIES, draft.countries, 'country'));
+      await ctx.reply(
+        'Обери країни пошуку:',
+        toggleKeyboard(COUNTRIES, draft.countries, 'country'),
+      );
       return;
     }
 
@@ -60,13 +63,18 @@ export function registerSettingsHandlers(bot: Telegraf): void {
         return;
       }
       draft.step = 'sources';
-      await ctx.editMessageText('Обери джерела вакансій:', toggleKeyboard(SOURCES, draft.sources, 'source'));
+      await ctx.editMessageText(
+        'Обери джерела вакансій:',
+        toggleKeyboard(SOURCES, draft.sources, 'source'),
+      );
       return;
     }
 
     if (draft.countries.has(value)) draft.countries.delete(value);
     else draft.countries.add(value);
-    await ctx.editMessageReplyMarkup(toggleKeyboard(COUNTRIES, draft.countries, 'country').reply_markup);
+    await ctx.editMessageReplyMarkup(
+      toggleKeyboard(COUNTRIES, draft.countries, 'country').reply_markup,
+    );
     await ctx.answerCbQuery();
   });
 
@@ -97,7 +105,9 @@ export function registerSettingsHandlers(bot: Telegraf): void {
       };
       await saveSettings(settings);
       clearDraft(ctx.from.id);
-      await ctx.editMessageText(`Готово!\n\n${formatSettings(settings)}\n\nВикористай /search, щоб знайти вакансії зараз.`);
+      await ctx.editMessageText(
+        `Готово!\n\n${formatSettings(settings)}\n\nВикористай /search, щоб знайти вакансії зараз.`,
+      );
       return;
     }
 

@@ -30,7 +30,9 @@ export function registerSearchHandlers(bot: Telegraf): void {
 function formatVacancies(vacancies: Vacancy[]): string {
   return vacancies
     .map((v) => {
-      const title = v.company ? `*${escapeMarkdown(v.title)}* — ${escapeMarkdown(v.company)}` : `*${escapeMarkdown(v.title)}*`;
+      const title = v.company
+        ? `*${escapeMarkdown(v.title)}* — ${escapeMarkdown(v.company)}`
+        : `*${escapeMarkdown(v.title)}*`;
       const location = v.location ? escapeMarkdown(v.location) : '';
       const link = `[Переглянути](${v.url})`;
       return [title, location, link].filter(Boolean).join('\n');
