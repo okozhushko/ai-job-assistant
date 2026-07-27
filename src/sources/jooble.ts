@@ -39,28 +39,40 @@ export const joobleSource: JobSource = {
       return [];
     }
 
-    const keywords = [query.jobTitle, ...query.stack].join(' ');
-    const response = await fetch(`https://${host}/api/${env.JOOBLE_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ keywords }),
-    });
+    // Jooble не має OR-параметра для ключових слів, тож кожен варіант назви
+    // посади шукаємо окремим запитом (дублікати прибираються вище, у searchService).
+    const results: Vacancy[] = [];
+    for (const jobTitle of query.jobTitles) {
+      const keywords = [jobTitle, ...query.stack].join(' ');
+      try {
+        const response = await fetch(`https://${host}/api/${env.JOOBLE_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ keywords }),
+        });
 
-    if (!response.ok) {
-      throw new Error(`Jooble API повернув статус ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`Jooble API повернув статус ${response.status}`);
+        }
+
+        const data = (await response.json()) as JoobleResponse;
+        for (const job of data.jobs) {
+          results.push({
+            id: `jooble:${job.id}`,
+            source: 'jooble',
+            title: job.title,
+            company: job.company || undefined,
+            location: job.location || undefined,
+            url: job.link,
+            description: job.snippet,
+            publishedAt: job.updated,
+            salary: job.salary || undefined,
+          });
+        }
+      } catch (err) {
+        console.error(`[jooble] запит для "${jobTitle}" (${query.country}) не вдався:`, err);
+      }
     }
-
-    const data = (await response.json()) as JoobleResponse;
-    return data.jobs.map((job) => ({
-      id: `jooble:${job.id}`,
-      source: 'jooble',
-      title: job.title,
-      company: job.company || undefined,
-      location: job.location || undefined,
-      url: job.link,
-      description: job.snippet,
-      publishedAt: job.updated,
-      salary: job.salary || undefined,
-    }));
+    return results;
   },
 };

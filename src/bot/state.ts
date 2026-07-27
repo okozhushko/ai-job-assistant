@@ -2,7 +2,7 @@ export type WizardStep = 'title' | 'stack' | 'countries' | 'sources';
 
 export interface WizardDraft {
   step: WizardStep;
-  jobTitle?: string;
+  jobTitles?: string[];
   stack?: string[];
   countries: Set<string>;
   sources: Set<string>;

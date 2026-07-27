@@ -1,7 +1,7 @@
 import type { Vacancy } from '../domain/types';
 
 export interface SearchQuery {
-  jobTitle: string;
+  jobTitles: string[];
   stack: string[];
   country: string;
 }

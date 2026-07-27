@@ -1,6 +1,6 @@
 import type { Server } from 'node:http';
 import type { Telegraf } from 'telegraf';
-import { createBot } from './bot/bot';
+import { createBot, registerBotCommands } from './bot/bot';
 import { startScheduler } from './scheduler/searchScheduler';
 import { startHealthServer } from './health/healthServer';
 import { env } from './config/env';
@@ -11,6 +11,7 @@ let healthServer: Server | undefined;
 async function main(): Promise<void> {
   healthServer = startHealthServer(env.HEALTH_PORT);
   bot = createBot();
+  await registerBotCommands(bot);
   startScheduler(bot);
   await bot.launch();
   console.log('ai-career-assistant бот запущено');

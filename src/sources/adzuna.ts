@@ -38,11 +38,14 @@ export const adzunaSource: JobSource = {
       return [];
     }
 
-    const what = [query.jobTitle, ...query.stack].join(' ');
+    // what_or зіставляє оголошення, де є БУДЬ-ЯКЕ з переданих слів (OR) —
+    // на відміну від what, який вимагає одночасної присутності ВСІХ слів (AND).
+    // Це дозволяє шукати одразу за кількома синонімами назви посади та/або стеком.
+    const whatOr = [...query.jobTitles, ...query.stack].join(' ');
     const url = new URL(`https://api.adzuna.com/v1/api/jobs/${countryCode}/search/1`);
     url.searchParams.set('app_id', env.ADZUNA_APP_ID);
     url.searchParams.set('app_key', env.ADZUNA_APP_KEY);
-    url.searchParams.set('what', what);
+    url.searchParams.set('what_or', whatOr);
     url.searchParams.set('results_per_page', '20');
     url.searchParams.set('content-type', 'application/json');
 

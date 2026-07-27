@@ -12,7 +12,7 @@ export interface Vacancy {
 
 export interface UserSettings {
   telegramUserId: number;
-  jobTitle: string;
+  jobTitles: string[];
   stack: string[];
   countries: string[];
   sources: string[];

@@ -7,7 +7,9 @@ import type { UserSettings } from '../../domain/types';
 export function registerSettingsHandlers(bot: Telegraf): void {
   bot.command('settings', async (ctx) => {
     startDraft(ctx.from.id);
-    await ctx.reply('Введи назву посади, яку шукаєш (наприклад: "Backend Developer"):');
+    await ctx.reply(
+      'Введи назви посади через кому — можна кілька синонімів, як їх називають у різних країнах/компаніях (наприклад: QA Engineer, Tester, SDET, Test Automation Engineer):',
+    );
   });
 
   bot.command('mysettings', async (ctx) => {
@@ -27,7 +29,10 @@ export function registerSettingsHandlers(bot: Telegraf): void {
     if (!draft) return next();
 
     if (draft.step === 'title') {
-      draft.jobTitle = text.trim();
+      draft.jobTitles = text
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
       draft.step = 'stack';
       await ctx.reply('Тепер введи стек через кому (наприклад: Node.js, TypeScript, PostgreSQL):');
       return;
@@ -96,7 +101,7 @@ export function registerSettingsHandlers(bot: Telegraf): void {
       const now = new Date().toISOString();
       const settings: UserSettings = {
         telegramUserId: ctx.from.id,
-        jobTitle: draft.jobTitle!,
+        jobTitles: draft.jobTitles!,
         stack: draft.stack!,
         countries: Array.from(draft.countries),
         sources: Array.from(draft.sources),
@@ -120,7 +125,7 @@ export function registerSettingsHandlers(bot: Telegraf): void {
 
 function formatSettings(settings: UserSettings): string {
   return [
-    `Посада: ${settings.jobTitle}`,
+    `Посада: ${settings.jobTitles.join(', ')}`,
     `Стек: ${settings.stack.join(', ')}`,
     `Країни: ${settings.countries.join(', ')}`,
     `Джерела: ${settings.sources.join(', ')}`,
