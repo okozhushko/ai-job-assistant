@@ -1,6 +1,10 @@
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import type { JobSource, SearchQuery } from './types';
 import type { Vacancy } from '../domain/types';
 import { env } from '../config/env';
+
+const execFileAsync = promisify(execFile);
 
 // Jooble API розподілений по країнах: кожна країна має власний хост.
 const COUNTRY_HOSTS: Record<string, string> = {
@@ -45,17 +49,25 @@ export const joobleSource: JobSource = {
     for (const jobTitle of query.jobTitles) {
       const keywords = [jobTitle, ...query.stack].join(' ');
       try {
-        const response = await fetch(`https://${host}/api/${env.JOOBLE_API_KEY}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ keywords }),
-        });
+        // Node-івський fetch/https отримує 403 від Cloudflare на боці Jooble
+        // (TLS-фінгерпринтинг блокує запити не з браузера/curl) навіть з
+        // валідним ключем — curl такий самий запит проходить без проблем,
+        // тому цей запит виконується через підпроцес curl, а не fetch().
+        const { stdout } = await execFileAsync('curl', [
+          '-sS',
+          '-f',
+          '--max-time',
+          '15',
+          '-X',
+          'POST',
+          `https://${host}/api/${env.JOOBLE_API_KEY}`,
+          '-H',
+          'Content-Type: application/json',
+          '-d',
+          JSON.stringify({ keywords }),
+        ]);
 
-        if (!response.ok) {
-          throw new Error(`Jooble API повернув статус ${response.status}`);
-        }
-
-        const data = (await response.json()) as JoobleResponse;
+        const data = JSON.parse(stdout) as JoobleResponse;
         for (const job of data.jobs) {
           results.push({
             id: `jooble:${job.id}`,

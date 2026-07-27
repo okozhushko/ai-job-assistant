@@ -20,6 +20,8 @@ Telegram-бот, що шукає вакансії за твоїми критер
 
 **Indeed** свідомо не додано в MVP: публічну Publisher API-програму Indeed закрив для нових розробників ще у 2021 році, тож стабільної офіційної інтеграції зараз немає.
 
+**Jooble і `curl`:** запити до Jooble API виконуються через підпроцес `curl`, а не через Node-івський `fetch`/`https`. Cloudflare на боці Jooble блокує запити з Node-івського TLS-стека (403), навіть з валідним ключем і коректними заголовками — той самий запит через `curl` проходить без проблем. У Docker-образі `curl` встановлюється автоматично; для локального запуску (`npm run dev`, не в Docker) потрібен `curl` у системі (є за замовчуванням на macOS/більшості Linux).
+
 ### Заплановані джерела (не в MVP)
 
 DOU Jobs, Djinni, Work.ua, Robota.ua, Jobs.ua — Україна; No Fluff Jobs, Just Join IT, Pracuj.pl, Bulldogjob, the:protocol, RocketJobs, Inhire, GoWork — Польща; InfoJobs, Tecnoempleo, Infoempleo, Jobandtalent, Domestika Jobs, Wellfound — Іспанія.
