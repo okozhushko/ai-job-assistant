@@ -14,8 +14,10 @@ export interface UserSettings {
   telegramUserId: number;
   jobTitles: string[];
   stack: string[];
+  excludeKeywords: string[];
   countries: string[];
   sources: string[];
+  paused: boolean;
   createdAt: string;
   updatedAt: string;
 }

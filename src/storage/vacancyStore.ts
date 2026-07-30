@@ -1,30 +1,45 @@
-import path from 'node:path';
-import { readJson, writeJson } from './jsonStore';
+import { db } from './db';
 import type { Vacancy } from '../domain/types';
 
-const SEEN_FILE = path.join(process.cwd(), 'data', 'seen-vacancies.json');
+const existsStmt = db.prepare(
+  'SELECT 1 FROM seen_vacancies WHERE telegram_user_id = ? AND vacancy_id = ?',
+);
+const insertStmt = db.prepare(
+  'INSERT OR IGNORE INTO seen_vacancies (telegram_user_id, vacancy_id, company) VALUES (?, ?, ?)',
+);
+const getCompanyStmt = db.prepare(
+  'SELECT company FROM seen_vacancies WHERE telegram_user_id = ? AND vacancy_id = ?',
+);
+const blockCompanyStmt = db.prepare(
+  'INSERT OR IGNORE INTO blocked_companies (telegram_user_id, company) VALUES (?, ?)',
+);
+const getBlockedCompaniesStmt = db.prepare(
+  'SELECT company FROM blocked_companies WHERE telegram_user_id = ?',
+);
 
-type SeenMap = Record<string, string[]>;
-
-async function loadSeen(): Promise<SeenMap> {
-  return readJson<SeenMap>(SEEN_FILE, {});
+export function filterNew(userId: string, vacancies: Vacancy[]): Vacancy[] {
+  const id = Number(userId);
+  return vacancies.filter((v) => existsStmt.get(id, v.id) === undefined);
 }
 
-async function saveSeen(map: SeenMap): Promise<void> {
-  await writeJson(SEEN_FILE, map);
+export function markSeen(userId: string, vacancies: Vacancy[]): void {
+  const id = Number(userId);
+  for (const v of vacancies) {
+    insertStmt.run(id, v.id, v.company ?? null);
+  }
 }
 
-export async function filterNew(userId: string, vacancies: Vacancy[]): Promise<Vacancy[]> {
-  const seen = await loadSeen();
-  const seenIds = new Set(seen[userId] ?? []);
-  return vacancies.filter((v) => !seenIds.has(v.id));
+export function getVacancyCompany(userId: string, vacancyId: string): string | undefined {
+  const row = getCompanyStmt.get(Number(userId), vacancyId) as
+    { company: string | null } | undefined;
+  return row?.company ?? undefined;
 }
 
-export async function markSeen(userId: string, vacancies: Vacancy[]): Promise<void> {
-  if (vacancies.length === 0) return;
-  const seen = await loadSeen();
-  const existing = new Set(seen[userId] ?? []);
-  for (const v of vacancies) existing.add(v.id);
-  seen[userId] = Array.from(existing);
-  await saveSeen(seen);
+export function blockCompany(userId: string, company: string): void {
+  blockCompanyStmt.run(Number(userId), company);
+}
+
+export function getBlockedCompanies(userId: string): Set<string> {
+  const rows = getBlockedCompaniesStmt.all(Number(userId)) as { company: string }[];
+  return new Set(rows.map((r) => r.company.toLowerCase()));
 }

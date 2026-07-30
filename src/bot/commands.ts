@@ -1,7 +1,14 @@
-export const BOT_COMMANDS = [
-  { command: 'start', description: 'Почати роботу з ботом' },
-  { command: 'settings', description: 'Налаштувати посаду, стек, країни, джерела' },
-  { command: 'mysettings', description: 'Показати поточні налаштування' },
-  { command: 'search', description: 'Знайти вакансії зараз' },
-  { command: 'help', description: 'Довідка' },
-];
+import type { Messages } from '../i18n';
+
+export function buildCommands(t: Messages) {
+  return [
+    { command: 'start', description: t.commands.start },
+    { command: 'settings', description: t.commands.settings },
+    { command: 'mysettings', description: t.commands.mysettings },
+    { command: 'search', description: t.commands.search },
+    { command: 'pause', description: t.commands.pause },
+    { command: 'resume', description: t.commands.resume },
+    { command: 'language', description: t.commands.language },
+    { command: 'help', description: t.commands.help },
+  ];
+}

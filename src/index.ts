@@ -3,12 +3,14 @@ import type { Telegraf } from 'telegraf';
 import { createBot, registerBotCommands } from './bot/bot';
 import { startScheduler } from './scheduler/searchScheduler';
 import { startHealthServer } from './health/healthServer';
+import { migrateLegacyJsonIfNeeded } from './storage/migrateLegacyJson';
 import { env } from './config/env';
 
 let bot: Telegraf | undefined;
 let healthServer: Server | undefined;
 
 async function main(): Promise<void> {
+  migrateLegacyJsonIfNeeded();
   healthServer = startHealthServer(env.HEALTH_PORT);
   bot = createBot();
   await registerBotCommands(bot);

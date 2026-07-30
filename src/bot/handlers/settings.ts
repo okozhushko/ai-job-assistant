@@ -1,24 +1,26 @@
 import type { Telegraf } from 'telegraf';
-import { COUNTRIES, SOURCES, toggleKeyboard } from '../keyboards';
+import { getCountries, SOURCES, toggleKeyboard } from '../keyboards';
 import { startDraft, getDraft, clearDraft } from '../state';
 import { getSettings, saveSettings } from '../../settings/settingsStore';
+import { t } from '../../i18n';
 import type { UserSettings } from '../../domain/types';
+import type { Messages } from '../../i18n';
 
 export function registerSettingsHandlers(bot: Telegraf): void {
   bot.command('settings', async (ctx) => {
+    const messages = t(ctx);
     startDraft(ctx.from.id);
-    await ctx.reply(
-      'Введи назви посади через кому — можна кілька синонімів, як їх називають у різних країнах/компаніях (наприклад: QA Engineer, Tester, SDET, Test Automation Engineer):',
-    );
+    await ctx.reply(messages.settings.askTitle);
   });
 
   bot.command('mysettings', async (ctx) => {
-    const settings = await getSettings(String(ctx.from.id));
+    const messages = t(ctx);
+    const settings = getSettings(String(ctx.from.id));
     if (!settings) {
-      await ctx.reply('Налаштування ще не задано. Введи /settings, щоб почати.');
+      await ctx.reply(messages.settings.notSetYet);
       return;
     }
-    await ctx.reply(formatSettings(settings));
+    await ctx.reply(formatSettings(settings, messages));
   });
 
   bot.on('text', async (ctx, next) => {
@@ -28,13 +30,15 @@ export function registerSettingsHandlers(bot: Telegraf): void {
     const draft = getDraft(ctx.from.id);
     if (!draft) return next();
 
+    const messages = t(ctx);
+
     if (draft.step === 'title') {
       draft.jobTitles = text
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
       draft.step = 'stack';
-      await ctx.reply('Тепер введи стек через кому (наприклад: Node.js, TypeScript, PostgreSQL):');
+      await ctx.reply(messages.settings.askStack);
       return;
     }
 
@@ -43,10 +47,24 @@ export function registerSettingsHandlers(bot: Telegraf): void {
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
+      draft.step = 'exclude';
+      await ctx.reply(messages.settings.askExclude);
+      return;
+    }
+
+    if (draft.step === 'exclude') {
+      const trimmed = text.trim();
+      draft.excludeKeywords =
+        trimmed === '-' || trimmed === ''
+          ? []
+          : trimmed
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean);
       draft.step = 'countries';
       await ctx.reply(
-        'Обери країни пошуку:',
-        toggleKeyboard(COUNTRIES, draft.countries, 'country'),
+        messages.settings.askCountries,
+        toggleKeyboard(getCountries(messages), draft.countries, 'country', messages.doneButton),
       );
       return;
     }
@@ -60,17 +78,18 @@ export function registerSettingsHandlers(bot: Telegraf): void {
       await ctx.answerCbQuery();
       return;
     }
+    const messages = t(ctx);
 
     const value = ctx.match[1];
     if (value === 'done') {
       if (draft.countries.size === 0) {
-        await ctx.answerCbQuery('Обери хоча б одну країну');
+        await ctx.answerCbQuery(messages.settings.needAtLeastOneCountry);
         return;
       }
       draft.step = 'sources';
       await ctx.editMessageText(
-        'Обери джерела вакансій:',
-        toggleKeyboard(SOURCES, draft.sources, 'source'),
+        messages.settings.askSources,
+        toggleKeyboard(SOURCES, draft.sources, 'source', messages.doneButton),
       );
       return;
     }
@@ -78,7 +97,8 @@ export function registerSettingsHandlers(bot: Telegraf): void {
     if (draft.countries.has(value)) draft.countries.delete(value);
     else draft.countries.add(value);
     await ctx.editMessageReplyMarkup(
-      toggleKeyboard(COUNTRIES, draft.countries, 'country').reply_markup,
+      toggleKeyboard(getCountries(messages), draft.countries, 'country', messages.doneButton)
+        .reply_markup,
     );
     await ctx.answerCbQuery();
   });
@@ -89,45 +109,51 @@ export function registerSettingsHandlers(bot: Telegraf): void {
       await ctx.answerCbQuery();
       return;
     }
+    const messages = t(ctx);
 
     const value = ctx.match[1];
     if (value === 'done') {
       if (draft.sources.size === 0) {
-        await ctx.answerCbQuery('Обери хоча б одне джерело');
+        await ctx.answerCbQuery(messages.settings.needAtLeastOneSource);
         return;
       }
 
-      const existing = await getSettings(String(ctx.from.id));
+      const existing = getSettings(String(ctx.from.id));
       const now = new Date().toISOString();
       const settings: UserSettings = {
         telegramUserId: ctx.from.id,
         jobTitles: draft.jobTitles!,
         stack: draft.stack!,
+        excludeKeywords: draft.excludeKeywords ?? [],
         countries: Array.from(draft.countries),
         sources: Array.from(draft.sources),
+        paused: existing?.paused ?? false,
         createdAt: existing?.createdAt ?? now,
         updatedAt: now,
       };
-      await saveSettings(settings);
+      saveSettings(settings);
       clearDraft(ctx.from.id);
-      await ctx.editMessageText(
-        `Готово!\n\n${formatSettings(settings)}\n\nВикористай /search, щоб знайти вакансії зараз.`,
-      );
+      await ctx.editMessageText(messages.settings.done(formatSettings(settings, messages)));
       return;
     }
 
     if (draft.sources.has(value)) draft.sources.delete(value);
     else draft.sources.add(value);
-    await ctx.editMessageReplyMarkup(toggleKeyboard(SOURCES, draft.sources, 'source').reply_markup);
+    await ctx.editMessageReplyMarkup(
+      toggleKeyboard(SOURCES, draft.sources, 'source', messages.doneButton).reply_markup,
+    );
     await ctx.answerCbQuery();
   });
 }
 
-function formatSettings(settings: UserSettings): string {
+function formatSettings(settings: UserSettings, messages: Messages): string {
+  const l = messages.settings.labels;
   return [
-    `Посада: ${settings.jobTitles.join(', ')}`,
-    `Стек: ${settings.stack.join(', ')}`,
-    `Країни: ${settings.countries.join(', ')}`,
-    `Джерела: ${settings.sources.join(', ')}`,
+    `${l.jobTitle}: ${settings.jobTitles.join(', ')}`,
+    `${l.stack}: ${settings.stack.join(', ')}`,
+    `${l.exclude}: ${settings.excludeKeywords.length > 0 ? settings.excludeKeywords.join(', ') : l.excludeEmpty}`,
+    `${l.countries}: ${settings.countries.join(', ')}`,
+    `${l.sources}: ${settings.sources.join(', ')}`,
+    `${l.status}: ${settings.paused ? l.paused : l.active}`,
   ].join('\n');
 }

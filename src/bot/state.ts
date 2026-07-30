@@ -1,9 +1,10 @@
-export type WizardStep = 'title' | 'stack' | 'countries' | 'sources';
+export type WizardStep = 'title' | 'stack' | 'exclude' | 'countries' | 'sources';
 
 export interface WizardDraft {
   step: WizardStep;
   jobTitles?: string[];
   stack?: string[];
+  excludeKeywords?: string[];
   countries: Set<string>;
   sources: Set<string>;
 }

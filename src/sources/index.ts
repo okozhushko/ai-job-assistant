@@ -14,3 +14,7 @@ export function getSources(ids: string[]): JobSource[] {
 export function getAllSources(): JobSource[] {
   return Object.values(registry);
 }
+
+export function getSourceName(id: string): string {
+  return registry[id]?.name ?? id;
+}

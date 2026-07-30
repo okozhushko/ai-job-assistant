@@ -1,6 +1,7 @@
 import type { JobSource, SearchQuery } from './types';
 import type { Vacancy } from '../domain/types';
 import { env } from '../config/env';
+import { fetchWithRetry } from './httpUtils';
 
 // Adzuna не покриває Україну — тільки країни зі свого офіційного списку.
 const SUPPORTED_COUNTRIES: Record<string, string> = {
@@ -49,7 +50,7 @@ export const adzunaSource: JobSource = {
     url.searchParams.set('results_per_page', '20');
     url.searchParams.set('content-type', 'application/json');
 
-    const response = await fetch(url.toString());
+    const response = await fetchWithRetry(url.toString(), {});
     if (!response.ok) {
       throw new Error(`Adzuna API повернув статус ${response.status}`);
     }
