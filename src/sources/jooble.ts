@@ -2,11 +2,13 @@ import type { JobSource, SearchQuery } from './types';
 import type { Vacancy } from '../domain/types';
 import { env } from '../config/env';
 
-// Jooble API розподілений по країнах: кожна країна має власний хост.
-const COUNTRY_HOSTS: Record<string, string> = {
-  UA: 'ua.jooble.org',
-  PL: 'pl.jooble.org',
-  ES: 'es.jooble.org',
+// Jooble фільтрує країну через параметр location у тілі запиту, а не через
+// піддомен (ua./pl./es.jooble.org повертають 403 для звичайного API-ключа —
+// доступ дозволено лише на загальному jooble.org).
+const COUNTRY_LOCATIONS: Record<string, string> = {
+  UA: 'Ukraine',
+  PL: 'Poland',
+  ES: 'Spain',
 };
 
 interface JoobleJob {
@@ -33,8 +35,8 @@ export const joobleSource: JobSource = {
       console.warn('[jooble] JOOBLE_API_KEY не задано, джерело пропущено');
       return [];
     }
-    const host = COUNTRY_HOSTS[query.country];
-    if (!host) {
+    const location = COUNTRY_LOCATIONS[query.country];
+    if (!location) {
       console.warn(`[jooble] країна ${query.country} не підтримується`);
       return [];
     }
@@ -45,10 +47,10 @@ export const joobleSource: JobSource = {
     for (const jobTitle of query.jobTitles) {
       const keywords = [jobTitle, ...query.stack].join(' ');
       try {
-        const response = await fetch(`https://${host}/api/${env.JOOBLE_API_KEY}`, {
+        const response = await fetch(`https://jooble.org/api/${env.JOOBLE_API_KEY}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ keywords }),
+          body: JSON.stringify({ keywords, location }),
         });
 
         if (!response.ok) {
