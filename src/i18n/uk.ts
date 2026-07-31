@@ -15,7 +15,7 @@ export const uk: Messages = {
   help: 'Використай /settings, щоб налаштувати пошук, а потім /search, щоб знайти вакансії.',
   settings: {
     askTitle:
-      'Введи назви посади через кому — можна кілька синонімів, як їх називають у різних країнах/компаніях (наприклад: QA Engineer, Tester, SDET, Test Automation Engineer):',
+      'Введи назви посади через кому — можна повні назви й окремі ключові слова водночас, чим коротше й специфічніше слово, тим ширше воно шукає (наприклад: QA Engineer, Tester, Manual Tester, SDET, Automation). Уникай надто загальних слів на кшталт "Engineer" чи "Manager" самих по собі — вони зловлять вакансії з геть інших професій:',
     askStack: 'Тепер введи стек через кому (наприклад: Node.js, TypeScript, PostgreSQL):',
     askExclude:
       'Слова для виключення через кому — вакансії з ними в назві чи описі показані не будуть (необов\'язково, наприклад: unpaid, internship, Senior). Постав "-", щоб пропустити:',
@@ -50,13 +50,24 @@ export const uk: Messages = {
     paused: 'Фоновий пошук призупинено. /resume — щоб відновити.',
     resumed: 'Фоновий пошук відновлено.',
   },
+  history: {
+    cleared: (count) =>
+      count > 0
+        ? `Історію пошуку очищено (${count}). Наступний /search знову покаже всі вакансії за твоїми фільтрами, навіть уже бачені раніше.`
+        : 'Історія пошуку й так порожня.',
+  },
   feedback: {
-    companyHidden: (company) => `Приховано вакансії від "${company}"`,
-    noted: 'Врахував, більше таких не покажу',
-    liked: '👍',
+    companyHidden: (company) => `Приховано всі вакансії від "${company}"`,
+    skipped: 'Пропущено',
   },
   vacancy: {
     viewLink: 'Переглянути',
+    markApplied: '📨 Подав',
+    appliedButton: '✅ Подано',
+    appliedLabel: '✅ Заявку вже подано',
+    appliedNoted: 'Позначено як "заявку подано"',
+    skipButton: '⏭ Пропустити',
+    blockButton: '🚫 Блок компанії',
   },
   countries: {
     UA: '🇺🇦 Україна',
@@ -76,6 +87,7 @@ export const uk: Messages = {
     pause: 'Призупинити фоновий пошук',
     resume: 'Відновити фоновий пошук',
     language: 'Змінити мову бота',
+    clearhistory: 'Очистити історію пошуку',
     help: 'Довідка',
   },
 };

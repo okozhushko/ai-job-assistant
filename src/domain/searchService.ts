@@ -4,7 +4,7 @@ import {
   dedupeByFingerprint,
   isFresh,
   matchesExcludeKeywords,
-  sortByRecency,
+  sortByRelevance,
 } from './vacancyFilters';
 import type { UserSettings, Vacancy } from './types';
 
@@ -63,5 +63,5 @@ export async function runSearchForUser(settings: UserSettings): Promise<SearchRe
   // Якщо позначити тут усі fresh, а показати лише перші N — решта
   // "зникне" назавжди, хоча користувач їх ніколи не бачив.
   const fresh = filterNew(userId, candidates);
-  return { vacancies: sortByRecency(fresh), failedSources };
+  return { vacancies: sortByRelevance(fresh, settings.stack), failedSources };
 }

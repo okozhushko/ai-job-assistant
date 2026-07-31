@@ -5,7 +5,7 @@ import { getAllSettings } from '../settings/settingsStore';
 import { runSearchForUser } from '../domain/searchService';
 import { formatVacancy, vacancyKeyboard } from '../bot/vacancyMessage';
 import { resolveStoredLocale, getMessages } from '../i18n';
-import { markSeen } from '../storage/vacancyStore';
+import { markSeen, isApplied } from '../storage/vacancyStore';
 
 const MAX_RESULTS_PER_RUN = 15;
 
@@ -21,13 +21,14 @@ export function startScheduler(bot: Telegraf): void {
         const userId = String(settings.telegramUserId);
         const messages = getMessages(resolveStoredLocale(userId));
         for (const vacancy of vacancies.slice(0, MAX_RESULTS_PER_RUN)) {
+          const applied = isApplied(userId, vacancy.id);
           await bot.telegram.sendMessage(
             settings.telegramUserId,
-            formatVacancy(vacancy, messages),
+            formatVacancy(vacancy, messages, applied),
             {
               parse_mode: 'Markdown',
               link_preview_options: { is_disabled: true },
-              ...vacancyKeyboard(vacancy.id),
+              ...vacancyKeyboard(vacancy.id, messages, applied),
             },
           );
           // Позначаємо одразу після успішної відправки — якщо надсилання

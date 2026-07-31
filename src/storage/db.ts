@@ -38,6 +38,12 @@ db.exec(`
     telegram_user_id INTEGER PRIMARY KEY,
     locale TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS applied_vacancies (
+    telegram_user_id INTEGER NOT NULL,
+    vacancy_id TEXT NOT NULL,
+    PRIMARY KEY (telegram_user_id, vacancy_id)
+  );
 `);
 
 // Легка еволюція схеми без окремого фреймворку міграцій: додаємо колонку,

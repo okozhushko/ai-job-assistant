@@ -58,7 +58,11 @@ export const joobleSource: JobSource = {
         await sleep(REQUEST_SPACING_MS);
       }
 
-      const keywords = [jobTitle, ...query.stack].join(' ');
+      // Стек навмисно НЕ додаємо в keywords: Jooble трактує кілька слів як
+      // AND, тож "QA Engineer Java Selenium" відсіє вакансію на кшталт
+      // "Manual Tester" без слова "Selenium" в описі. Пошук веде лише
+      // посада - стек використовується пізніше для сортування за релевантністю.
+      const keywords = jobTitle;
       try {
         const response = await fetchWithRetry(`https://jooble.org/api/${env.JOOBLE_API_KEY}`, {
           method: 'POST',

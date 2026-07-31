@@ -41,8 +41,11 @@ export const adzunaSource: JobSource = {
 
     // what_or зіставляє оголошення, де є БУДЬ-ЯКЕ з переданих слів (OR) —
     // на відміну від what, який вимагає одночасної присутності ВСІХ слів (AND).
-    // Це дозволяє шукати одразу за кількома синонімами назви посади та/або стеком.
-    const whatOr = [...query.jobTitles, ...query.stack].join(' ');
+    // Це дозволяє шукати одразу за кількома синонімами назви посади.
+    // Стек тут НЕ додаємо: інакше в результати потрапляють геть не пов'язані
+    // вакансії (напр. "Java Backend Developer"), що збіглись лише по стеку.
+    // Стек використовується пізніше для сортування за релевантністю.
+    const whatOr = query.jobTitles.join(' ');
     const url = new URL(`https://api.adzuna.com/v1/api/jobs/${countryCode}/search/1`);
     url.searchParams.set('app_id', env.ADZUNA_APP_ID);
     url.searchParams.set('app_key', env.ADZUNA_APP_KEY);

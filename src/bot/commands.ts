@@ -9,6 +9,7 @@ export function buildCommands(t: Messages) {
     { command: 'pause', description: t.commands.pause },
     { command: 'resume', description: t.commands.resume },
     { command: 'language', description: t.commands.language },
+    { command: 'clear', description: t.commands.clearhistory },
     { command: 'help', description: t.commands.help },
   ];
 }

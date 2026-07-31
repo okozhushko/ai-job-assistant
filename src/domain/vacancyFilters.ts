@@ -58,10 +58,26 @@ export function matchesExcludeKeywords(vacancy: Vacancy, excludeKeywords: string
   });
 }
 
-// Найновіші публікації — першими. Вакансії з невідомою/непарсибельною
-// датою йдуть в кінець, а не на початок і не в довільному порядку.
-export function sortByRecency(vacancies: Vacancy[]): Vacancy[] {
+// Кількість слів стеку, які трапляються в назві чи описі — пошук веде лише
+// за посадою (див. sources/jooble.ts, sources/adzuna.ts), а стек тут лише
+// підіймає найрелевантніші результати вище, не відсіюючи решту.
+function countStackMatches(vacancy: Vacancy, stack: string[]): number {
+  const haystack = `${vacancy.title} ${vacancy.description ?? ''}`;
+  return stack.filter((keyword) => {
+    const trimmed = keyword.trim();
+    if (!trimmed) return false;
+    return new RegExp(`\\b${escapeRegExp(trimmed)}\\b`, 'iu').test(haystack);
+  }).length;
+}
+
+// Спершу — більше збігів по стеку, далі — найновіші публікації. Вакансії
+// з невідомою/непарсибельною датою йдуть в кінець своєї групи релевантності,
+// а не на початок і не в довільному порядку.
+export function sortByRelevance(vacancies: Vacancy[], stack: string[]): Vacancy[] {
   return [...vacancies].sort((a, b) => {
+    const stackDiff = countStackMatches(b, stack) - countStackMatches(a, stack);
+    if (stackDiff !== 0) return stackDiff;
+
     const aTime = a.publishedAt ? Date.parse(a.publishedAt) : NaN;
     const bTime = b.publishedAt ? Date.parse(b.publishedAt) : NaN;
     const aValid = !Number.isNaN(aTime);

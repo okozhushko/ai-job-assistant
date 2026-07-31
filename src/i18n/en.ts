@@ -15,7 +15,7 @@ export const en: Messages = {
   help: 'Use /settings to configure your search, then /search to find vacancies.',
   settings: {
     askTitle:
-      "Enter job titles separated by commas — you can list several synonyms, as they're called in different countries/companies (e.g. QA Engineer, Tester, SDET, Test Automation Engineer):",
+      'Enter job titles separated by commas — you can mix full titles and standalone keywords, the shorter and more specific a word is, the wider it searches (e.g. QA Engineer, Tester, Manual Tester, SDET, Automation). Avoid overly generic single words like "Engineer" or "Manager" on their own — they\'ll match jobs from completely unrelated fields:',
     askStack: 'Now enter your stack separated by commas (e.g. Node.js, TypeScript, PostgreSQL):',
     askExclude:
       'Words to exclude, comma-separated — vacancies containing them in the title or description won\'t be shown (optional, e.g. unpaid, internship, Senior). Send "-" to skip:',
@@ -50,13 +50,24 @@ export const en: Messages = {
     paused: 'Background search paused. /resume to continue.',
     resumed: 'Background search resumed.',
   },
+  history: {
+    cleared: (count) =>
+      count > 0
+        ? `Search history cleared (${count}). The next /search will show all vacancies matching your filters again, even ones you've already seen.`
+        : 'Search history is already empty.',
+  },
   feedback: {
-    companyHidden: (company) => `Hid vacancies from "${company}"`,
-    noted: "Got it, won't show more like this",
-    liked: '👍',
+    companyHidden: (company) => `Hid all vacancies from "${company}"`,
+    skipped: 'Skipped',
   },
   vacancy: {
     viewLink: 'View',
+    markApplied: '📨 Applied',
+    appliedButton: '✅ Applied',
+    appliedLabel: '✅ Already applied',
+    appliedNoted: 'Marked as applied',
+    skipButton: '⏭ Skip',
+    blockButton: '🚫 Block company',
   },
   countries: {
     UA: '🇺🇦 Ukraine',
@@ -76,6 +87,7 @@ export const en: Messages = {
     pause: 'Pause background search',
     resume: 'Resume background search',
     language: 'Change bot language',
+    clearhistory: 'Clear search history',
     help: 'Help',
   },
 };

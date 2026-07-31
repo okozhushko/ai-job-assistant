@@ -6,6 +6,7 @@ import { registerSearchHandlers } from './handlers/search';
 import { registerPauseHandlers } from './handlers/pause';
 import { registerFeedbackHandlers } from './handlers/feedback';
 import { registerLanguageHandlers } from './handlers/language';
+import { registerHistoryHandlers } from './handlers/history';
 import { buildCommands } from './commands';
 import { getMessages } from '../i18n';
 
@@ -18,6 +19,7 @@ export function createBot(): Telegraf {
   registerPauseHandlers(bot);
   registerFeedbackHandlers(bot);
   registerLanguageHandlers(bot);
+  registerHistoryHandlers(bot);
 
   bot.catch((err, ctx) => {
     console.error(`[bot] помилка при обробці update ${ctx.updateType}:`, err);
@@ -27,9 +29,21 @@ export function createBot(): Telegraf {
 }
 
 export async function registerBotCommands(bot: Telegraf): Promise<void> {
-  // Дефолтний список (для мов, яких ми ще не підтримуємо, напр. pl/es) — англійська,
-  // плюс явні мовно-специфічні списки для uk/en так Telegram сам показує рідне меню.
-  await bot.telegram.setMyCommands(buildCommands(getMessages('en')));
-  await bot.telegram.setMyCommands(buildCommands(getMessages('uk')), { language_code: 'uk' });
-  await bot.telegram.setMyCommands(buildCommands(getMessages('en')), { language_code: 'en' });
+  // Бот працює лише в приватних чатах, а scope "all_private_chats" пріоритетніший
+  // за "default" - якщо там лишився старий список (напр. з початкового
+  // /setcommands у BotFather), Telegram покаже саме його, навіть якщо ми
+  // оновили лише "default". Тому реєструємо однаковий список в обох scope.
+  const scopes = [{ type: 'default' as const }, { type: 'all_private_chats' as const }];
+
+  for (const scope of scopes) {
+    await bot.telegram.setMyCommands(buildCommands(getMessages('en')), { scope });
+    await bot.telegram.setMyCommands(buildCommands(getMessages('uk')), {
+      scope,
+      language_code: 'uk',
+    });
+    await bot.telegram.setMyCommands(buildCommands(getMessages('en')), {
+      scope,
+      language_code: 'en',
+    });
+  }
 }

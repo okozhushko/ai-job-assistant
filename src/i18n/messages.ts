@@ -39,13 +39,21 @@ export interface Messages {
     paused: string;
     resumed: string;
   };
+  history: {
+    cleared: (count: number) => string;
+  };
   feedback: {
     companyHidden: (company: string) => string;
-    noted: string;
-    liked: string;
+    skipped: string;
   };
   vacancy: {
     viewLink: string;
+    markApplied: string;
+    appliedButton: string;
+    appliedLabel: string;
+    appliedNoted: string;
+    skipButton: string;
+    blockButton: string;
   };
   countries: {
     UA: string;
@@ -65,6 +73,7 @@ export interface Messages {
     pause: string;
     resume: string;
     language: string;
+    clearhistory: string;
     help: string;
   };
 }

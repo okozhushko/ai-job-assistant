@@ -1,7 +1,7 @@
 import type { Telegraf } from 'telegraf';
 import { getSettings } from '../../settings/settingsStore';
 import { runSearchForUser } from '../../domain/searchService';
-import { markSeen } from '../../storage/vacancyStore';
+import { markSeen, isApplied } from '../../storage/vacancyStore';
 import { getSourceName } from '../../sources';
 import { formatVacancy, vacancyKeyboard } from '../vacancyMessage';
 import { t } from '../../i18n';
@@ -32,12 +32,14 @@ export function registerSearchHandlers(bot: Telegraf): void {
       return;
     }
 
+    const userId = String(ctx.from.id);
     const shown = vacancies.slice(0, MAX_RESULTS_SHOWN);
     for (const vacancy of shown) {
-      await ctx.reply(formatVacancy(vacancy, messages), {
+      const applied = isApplied(userId, vacancy.id);
+      await ctx.reply(formatVacancy(vacancy, messages, applied), {
         parse_mode: 'Markdown',
         link_preview_options: { is_disabled: true },
-        ...vacancyKeyboard(vacancy.id),
+        ...vacancyKeyboard(vacancy.id, messages, applied),
       });
     }
     // Позначаємо "побаченими" лише те, що реально показали — решта

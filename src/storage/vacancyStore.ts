@@ -16,6 +16,13 @@ const blockCompanyStmt = db.prepare(
 const getBlockedCompaniesStmt = db.prepare(
   'SELECT company FROM blocked_companies WHERE telegram_user_id = ?',
 );
+const clearSeenStmt = db.prepare('DELETE FROM seen_vacancies WHERE telegram_user_id = ?');
+const markAppliedStmt = db.prepare(
+  'INSERT OR IGNORE INTO applied_vacancies (telegram_user_id, vacancy_id) VALUES (?, ?)',
+);
+const isAppliedStmt = db.prepare(
+  'SELECT 1 FROM applied_vacancies WHERE telegram_user_id = ? AND vacancy_id = ?',
+);
 
 export function filterNew(userId: string, vacancies: Vacancy[]): Vacancy[] {
   const id = Number(userId);
@@ -42,4 +49,22 @@ export function blockCompany(userId: string, company: string): void {
 export function getBlockedCompanies(userId: string): Set<string> {
   const rows = getBlockedCompaniesStmt.all(Number(userId)) as { company: string }[];
   return new Set(rows.map((r) => r.company.toLowerCase()));
+}
+
+// Прибирає позначки "вже показано" — наступний /search знову покаже всі
+// вакансії, що підходять під фільтри, навіть якщо їх показували раніше.
+export function clearSeen(userId: string): number {
+  const result = clearSeenStmt.run(Number(userId));
+  return Number(result.changes);
+}
+
+// "Подано заявку" зберігається окремо від seen_vacancies і не чиститься
+// через /clear - на відміну від "показано", це рішення користувача, яке
+// не мало б зникати випадково.
+export function markApplied(userId: string, vacancyId: string): void {
+  markAppliedStmt.run(Number(userId), vacancyId);
+}
+
+export function isApplied(userId: string, vacancyId: string): boolean {
+  return isAppliedStmt.get(Number(userId), vacancyId) !== undefined;
 }
