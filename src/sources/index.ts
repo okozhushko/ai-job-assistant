@@ -10,11 +10,3 @@ const registry: Record<string, JobSource> = {
 export function getSources(ids: string[]): JobSource[] {
   return ids.map((id) => registry[id]).filter((s): s is JobSource => Boolean(s));
 }
-
-export function getAllSources(): JobSource[] {
-  return Object.values(registry);
-}
-
-export function getSourceName(id: string): string {
-  return registry[id]?.name ?? id;
-}

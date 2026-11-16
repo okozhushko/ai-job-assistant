@@ -17,8 +17,6 @@ interface AdzunaResult {
   redirect_url: string;
   description?: string;
   created?: string;
-  salary_min?: number;
-  salary_max?: number;
 }
 
 interface AdzunaResponse {
@@ -53,7 +51,7 @@ export const adzunaSource: JobSource = {
     url.searchParams.set('results_per_page', '20');
     url.searchParams.set('content-type', 'application/json');
 
-    const response = await fetchWithRetry(url.toString(), {});
+    const response = await fetchWithRetry(url.toString());
     if (!response.ok) {
       throw new Error(`Adzuna API повернув статус ${response.status}`);
     }
@@ -68,7 +66,6 @@ export const adzunaSource: JobSource = {
       url: item.redirect_url,
       description: item.description,
       publishedAt: item.created,
-      salary: item.salary_min ? `${item.salary_min}–${item.salary_max ?? ''}` : undefined,
     }));
   },
 };

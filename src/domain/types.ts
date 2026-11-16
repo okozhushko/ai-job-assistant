@@ -7,7 +7,6 @@ export interface Vacancy {
   url: string;
   description?: string;
   publishedAt?: string;
-  salary?: string;
 }
 
 export interface UserSettings {

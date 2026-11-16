@@ -14,7 +14,7 @@ export function getMessages(locale: Locale): Messages {
 
 // Автовизначення: Telegram передає language_code клієнта з кожним update.
 // Явний вибір через /language (localeStore) завжди має пріоритет.
-export function detectLocale(languageCode?: string): Locale {
+function detectLocale(languageCode?: string): Locale {
   return (languageCode ?? '').toLowerCase().startsWith('uk') ? 'uk' : 'en';
 }
 

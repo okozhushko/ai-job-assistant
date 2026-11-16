@@ -10,7 +10,7 @@ import type { UserSettings, Vacancy } from './types';
 
 export interface SearchResult {
   vacancies: Vacancy[];
-  // id джерел, які не відповіли жодного разу за весь прогін (усі країни) —
+  // Назви джерел, які не відповіли жодного разу за весь прогін (усі країни) —
   // на відміну від часткового збою, вартий явного попередження користувачу.
   failedSources: string[];
 }
@@ -29,7 +29,6 @@ export async function runSearchForUser(settings: UserSettings): Promise<SearchRe
       try {
         const results = await source.search({
           jobTitles: settings.jobTitles,
-          stack: settings.stack,
           country,
         });
         for (const vacancy of results) {
@@ -47,13 +46,13 @@ export async function runSearchForUser(settings: UserSettings): Promise<SearchRe
       (source) =>
         (failures.get(source.id) ?? 0) > 0 && failures.get(source.id) === attempts.get(source.id),
     )
-    .map((source) => source.id);
+    .map((source) => source.name);
 
   const userId = String(settings.telegramUserId);
   const blockedCompanies = getBlockedCompanies(userId);
 
   const candidates = dedupeByFingerprint(Array.from(found.values()))
-    .filter((v) => isFresh(v))
+    .filter(isFresh)
     .filter((v) => !matchesExcludeKeywords(v, settings.excludeKeywords))
     .filter((v) => !v.company || !blockedCompanies.has(v.company.toLowerCase()));
 
