@@ -13,10 +13,8 @@ export interface WizardDraft {
 // незавершений /settings доведеться почати заново. Прийнятно для MVP.
 const drafts = new Map<number, WizardDraft>();
 
-export function startDraft(userId: number): WizardDraft {
-  const draft: WizardDraft = { step: 'title', countries: new Set(), sources: new Set() };
-  drafts.set(userId, draft);
-  return draft;
+export function startDraft(userId: number): void {
+  drafts.set(userId, { step: 'title', countries: new Set(), sources: new Set() });
 }
 
 export function getDraft(userId: number): WizardDraft | undefined {

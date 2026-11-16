@@ -1,8 +1,7 @@
 import type { Vacancy } from './types';
 
 // Вакансії старші цього порогу приховуємо — старі оголошення здебільшого
-// вже закриті/неактуальні. Фіксоване значення для простоти; можна винести
-// в налаштування користувача пізніше, якщо знадобиться.
+// вже закриті/неактуальні.
 const MAX_AGE_DAYS = 45;
 
 function normalize(text: string): string {
@@ -35,11 +34,11 @@ export function dedupeByFingerprint(vacancies: Vacancy[]): Vacancy[] {
 
 // Якщо дату публікації не вдалось розпарсити або її взагалі немає —
 // не відкидаємо вакансію лише через брак даних.
-export function isFresh(vacancy: Vacancy, maxAgeDays: number = MAX_AGE_DAYS): boolean {
+export function isFresh(vacancy: Vacancy): boolean {
   if (!vacancy.publishedAt) return true;
   const publishedMs = Date.parse(vacancy.publishedAt);
   if (Number.isNaN(publishedMs)) return true;
-  return Date.now() - publishedMs <= maxAgeDays * 24 * 60 * 60 * 1000;
+  return Date.now() - publishedMs <= MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
 }
 
 function escapeRegExp(text: string): string {
@@ -48,26 +47,22 @@ function escapeRegExp(text: string): string {
 
 // Зіставлення по межах слова, а не будь-яке входження підрядка — інакше
 // коротке ключове слово на кшталт "AI" ловило б "domain", "retail" тощо.
-export function matchesExcludeKeywords(vacancy: Vacancy, excludeKeywords: string[]): boolean {
-  if (excludeKeywords.length === 0) return false;
+function mentionsKeyword(vacancy: Vacancy, keyword: string): boolean {
+  const trimmed = keyword.trim();
+  if (!trimmed) return false;
   const haystack = `${vacancy.title} ${vacancy.description ?? ''}`;
-  return excludeKeywords.some((keyword) => {
-    const trimmed = keyword.trim();
-    if (!trimmed) return false;
-    return new RegExp(`\\b${escapeRegExp(trimmed)}\\b`, 'iu').test(haystack);
-  });
+  return new RegExp(`\\b${escapeRegExp(trimmed)}\\b`, 'iu').test(haystack);
+}
+
+export function matchesExcludeKeywords(vacancy: Vacancy, excludeKeywords: string[]): boolean {
+  return excludeKeywords.some((keyword) => mentionsKeyword(vacancy, keyword));
 }
 
 // Кількість слів стеку, які трапляються в назві чи описі — пошук веде лише
 // за посадою (див. sources/jooble.ts, sources/adzuna.ts), а стек тут лише
 // підіймає найрелевантніші результати вище, не відсіюючи решту.
 function countStackMatches(vacancy: Vacancy, stack: string[]): number {
-  const haystack = `${vacancy.title} ${vacancy.description ?? ''}`;
-  return stack.filter((keyword) => {
-    const trimmed = keyword.trim();
-    if (!trimmed) return false;
-    return new RegExp(`\\b${escapeRegExp(trimmed)}\\b`, 'iu').test(haystack);
-  }).length;
+  return stack.filter((keyword) => mentionsKeyword(vacancy, keyword)).length;
 }
 
 // Спершу — більше збігів по стеку, далі — найновіші публікації. Вакансії

@@ -1,8 +1,7 @@
 import { existsSync, readFileSync, renameSync } from 'node:fs';
 import path from 'node:path';
-import { db } from './db';
+import { DATA_DIR, db } from './db';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
 const LEGACY_SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 const LEGACY_SEEN_FILE = path.join(DATA_DIR, 'seen-vacancies.json');
 

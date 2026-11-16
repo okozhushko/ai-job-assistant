@@ -8,6 +8,8 @@ export const en: Messages = {
       '/settings — set job title, stack, countries and sources',
       '/mysettings — show current settings',
       '/search — search for new vacancies now',
+      '/pause, /resume — pause or resume background search',
+      '/clear — clear the history of shown vacancies',
       '/language — change bot language',
       '/help — help',
     ].join('\n'),

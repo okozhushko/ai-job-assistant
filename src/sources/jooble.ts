@@ -22,14 +22,12 @@ interface JoobleJob {
   title: string;
   location: string;
   snippet: string;
-  salary: string;
   company: string;
   link: string;
   updated: string;
 }
 
 interface JoobleResponse {
-  totalCount: number;
   jobs: JoobleJob[];
 }
 
@@ -62,12 +60,11 @@ export const joobleSource: JobSource = {
       // AND, тож "QA Engineer Java Selenium" відсіє вакансію на кшталт
       // "Manual Tester" без слова "Selenium" в описі. Пошук веде лише
       // посада - стек використовується пізніше для сортування за релевантністю.
-      const keywords = jobTitle;
       try {
         const response = await fetchWithRetry(`https://jooble.org/api/${env.JOOBLE_API_KEY}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ keywords, location }),
+          body: JSON.stringify({ keywords: jobTitle, location }),
         });
 
         if (!response.ok) {
@@ -85,7 +82,6 @@ export const joobleSource: JobSource = {
             url: job.link,
             description: job.snippet,
             publishedAt: job.updated,
-            salary: job.salary || undefined,
           });
         }
         successCount++;

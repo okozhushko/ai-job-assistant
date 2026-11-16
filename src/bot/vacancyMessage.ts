@@ -2,6 +2,10 @@ import { Markup } from 'telegraf';
 import type { Vacancy } from '../domain/types';
 import type { Messages } from '../i18n';
 
+// Кожна вакансія — окреме повідомлення з кнопками, тож обмежуємо кількість
+// за один прогін (/search чи фоновий), щоб не заспамити чат при широких фільтрах.
+export const MAX_VACANCIES_PER_RUN = 15;
+
 export function vacancyKeyboard(vacancyId: string, t: Messages, applied: boolean) {
   return Markup.inlineKeyboard([
     [
@@ -14,7 +18,18 @@ export function vacancyKeyboard(vacancyId: string, t: Messages, applied: boolean
   ]);
 }
 
-export function formatVacancy(v: Vacancy, t: Messages, applied: boolean): string {
+export function buildVacancyMessage(v: Vacancy, t: Messages, applied: boolean) {
+  return {
+    text: formatVacancy(v, t, applied),
+    extra: {
+      parse_mode: 'Markdown' as const,
+      link_preview_options: { is_disabled: true },
+      ...vacancyKeyboard(v.id, t, applied),
+    },
+  };
+}
+
+function formatVacancy(v: Vacancy, t: Messages, applied: boolean): string {
   const title = v.company
     ? `*${escapeMarkdown(v.title)}* — ${escapeMarkdown(v.company)}`
     : `*${escapeMarkdown(v.title)}*`;

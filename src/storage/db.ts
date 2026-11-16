@@ -1,13 +1,11 @@
 import { DatabaseSync } from 'node:sqlite';
-import { existsSync, mkdirSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
+export const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_PATH = path.join(DATA_DIR, 'bot.sqlite');
 
-if (!existsSync(DATA_DIR)) {
-  mkdirSync(DATA_DIR, { recursive: true });
-}
+mkdirSync(DATA_DIR, { recursive: true });
 
 export const db = new DatabaseSync(DB_PATH);
 
